@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina Home OS &mdash; Glassmorphism Edition</title>
+  
+  <!-- Inter & JetBrains Mono Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            black: '#09090b',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Glassmorphism Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="relative selection:bg-black selection:text-white">
+
+  <!-- Ambient Depth Orbs for Frosted Glass Effect -->
+  <div class="ambient-scene">
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="ambient-orb orb-3"></div>
+  </div>
+
+  <!-- Dynamic Ambient Lighting Halo -->
+  <div id="ambientHalo" class="ambient-lighting-halo"></div>
+
+  <!-- Toast Notification Stack -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-auto"></div>
+
+  <!-- Top Header Navigation (Frosted Glass) -->
+  <header class="sticky top-0 z-40 glass-nav transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+      
+      <!-- Brand & Hub Status -->
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-black flex items-center justify-center text-white text-xl shadow-lg">
+          <i class="fa-solid fa-house-signal"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-black text-lg sm:text-xl tracking-tight text-zinc-950">LUMINA</span>
+            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-black text-white uppercase tracking-widest shadow-sm">GLASS OS</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-zinc-500">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="font-medium text-zinc-700">Hub Online</span>
+            <span class="hidden sm:inline text-zinc-300">&bull;</span>
+            <span class="hidden sm:inline font-mono font-semibold text-zinc-800" id="currentTime">18:45:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Weather Pill (Frosted) -->
+      <div class="hidden md:flex items-center gap-4 glass-panel px-4 py-2 rounded-2xl border border-white/80 backdrop-blur-xl">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-cloud-sun text-amber-500 text-lg"></i>
+          <div>
+            <div class="text-xs font-bold text-zinc-900">22°C (72°F) • Partly Cloudy</div>
+            <div class="text-[11px] text-zinc-500 flex items-center gap-2">
+              <span>Humidity 48%</span>
+              <span>&bull;</span>
+              <span class="text-emerald-700 font-semibold">AQI 28 (Optimal)</span>
+            </div>
+          </div>
+        </div>
+        <div class="h-6 w-px bg-black/10"></div>
+        <div class="text-xs font-semibold text-zinc-700 font-mono" id="currentDate">Thu, Nov 5</div>
+      </div>
+
+      <!-- Header Utilities & Quick Actions -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button 
+          id="tempUnitToggleBtn"
+          onclick="window.toggleTempUnit()"
+          title="Toggle Celsius / Fahrenheit"
+          class="h-10 px-3.5 rounded-2xl glass-panel hover:bg-white border border-white/80 text-zinc-900 text-xs font-bold shadow-sm transition flex items-center gap-1">
+          °C
+        </button>
+
+        <button 
+          onclick="window.toggleSound()"
+          title="Toggle Sound FX"
+          class="w-10 h-10 rounded-2xl glass-panel hover:bg-white border border-white/80 shadow-sm flex items-center justify-center text-sm transition">
+          <i id="soundToggleIcon" class="fa-solid fa-volume-high text-zinc-900"></i>
+        </button>
+
+        <button 
+          onclick="window.toggleTheme()"
+          title="Toggle Theme"
+          class="w-10 h-10 rounded-2xl glass-panel hover:bg-white border border-white/80 shadow-sm flex items-center justify-center text-sm text-zinc-900 transition">
+          <i id="themeToggleIcon" class="fa-solid fa-moon"></i>
+        </button>
+
+        <button 
+          onclick="window.resetDemoData()"
+          title="Reset to Demo State"
+          class="w-10 h-10 rounded-2xl glass-panel hover:bg-rose-50 border border-white/80 shadow-sm flex items-center justify-center text-sm text-zinc-600 hover:text-rose-600 transition">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+
+        <div class="flex items-center gap-2 pl-1">
+          <div class="w-10 h-10 rounded-2xl bg-black flex items-center justify-center text-white font-bold text-sm shadow-md">
+            M
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- AI Voice & Natural Language Bar (Frosted Capsule) -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-5 relative z-10">
+    <div class="relative glass-panel rounded-3xl p-3 border border-white/80 shadow-lg">
+      <form onsubmit="window.handleVoiceCommand(event)" class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-black text-white flex items-center justify-center text-sm ml-1 shadow-md">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <input 
+          id="voiceCommandInput"
+          type="text" 
+          placeholder="Command or ask: 'Movie night', 'Turn off all lights', 'Lock front door', 'Set AC to 21°'..." 
+          class="flex-1 bg-transparent border-0 text-xs sm:text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none font-medium">
+        <button 
+          type="submit" 
+          class="px-5 py-2.5 rounded-2xl bg-black hover:bg-zinc-800 text-white font-bold text-xs flex items-center gap-2 shadow-md transition active:scale-95">
+          <span>Run</span>
+          <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </button>
+      </form>
+
+      <!-- Quick Action Pills -->
+      <div class="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-black/5 text-[11px] text-zinc-500">
+        <span class="text-zinc-600 font-semibold">Quick Prompts:</span>
+        <button onclick="document.getElementById('voiceCommandInput').value='Movie night'; window.handleVoiceCommand();" class="px-3 py-1 rounded-full glass-panel hover:bg-white text-zinc-800 font-medium transition border border-white/80 shadow-xs">🎬 Movie Night</button>
+        <button onclick="document.getElementById('voiceCommandInput').value='Turn on all lights'; window.handleVoiceCommand();" class="px-3 py-1 rounded-full glass-panel hover:bg-white text-zinc-800 font-medium transition border border-white/80 shadow-xs">💡 All Lights On</button>
+        <button onclick="document.getElementById('voiceCommandInput').value='Lock front door'; window.handleVoiceCommand();" class="px-3 py-1 rounded-full glass-panel hover:bg-white text-zinc-800 font-medium transition border border-white/80 shadow-xs">🔒 Lock Front Door</button>
+        <button onclick="document.getElementById('voiceCommandInput').value='Start cleaning'; window.handleVoiceCommand();" class="px-3 py-1 rounded-full glass-panel hover:bg-white text-zinc-800 font-medium transition border border-white/80 shadow-xs">🤖 Start Vacuum</button>
+        <button onclick="document.getElementById('voiceCommandInput').value='Bedtime'; window.handleVoiceCommand();" class="px-3 py-1 rounded-full glass-panel hover:bg-white text-zinc-800 font-medium transition border border-white/80 shadow-xs">🌙 Bedtime</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Primary Navigation Tabs (Frosted Glass Container) -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-5 relative z-10">
+    <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+      <button 
+        data-tab="dashboard"
+        onclick="window.switchTab('dashboard')"
+        class="nav-tab-btn px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold bg-black text-white shadow-md transition flex items-center gap-2">
+        <i class="fa-solid fa-layer-group"></i>
+        <span>Dashboard</span>
+      </button>
+
+      <button 
+        data-tab="floorplan"
+        onclick="window.switchTab('floorplan')"
+        class="nav-tab-btn px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-zinc-700 hover:text-black glass-panel border border-white/80 shadow-sm transition flex items-center gap-2">
+        <i class="fa-solid fa-map-location-dot"></i>
+        <span>Spatial Floor Plan</span>
+      </button>
+
+      <button 
+        data-tab="analytics"
+        onclick="window.switchTab('analytics')"
+        class="nav-tab-btn px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-zinc-700 hover:text-black glass-panel border border-white/80 shadow-sm transition flex items-center gap-2">
+        <i class="fa-solid fa-bolt"></i>
+        <span>Energy & Solar</span>
+      </button>
+
+      <button 
+        data-tab="security"
+        onclick="window.switchTab('security')"
+        class="nav-tab-btn px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-zinc-700 hover:text-black glass-panel border border-white/80 shadow-sm transition flex items-center gap-2">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>Security Center</span>
+      </button>
+
+      <button 
+        data-tab="routines"
+        onclick="window.switchTab('routines')"
+        class="nav-tab-btn px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-zinc-700 hover:text-black glass-panel border border-white/80 shadow-sm transition flex items-center gap-2">
+        <i class="fa-solid fa-clock"></i>
+        <span>Automations & Routines</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 relative z-10">
+
+    <!-- ==================== TAB 1: DASHBOARD ==================== -->
+    <div id="tabView_dashboard" class="space-y-6">
+
+      <!-- Real-Time Metrics Summary Cards (Frosted Glass) -->
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        
+        <!-- Metric 1 -->
+        <div class="glass-panel rounded-3xl p-4 sm:p-5 flex items-center gap-4 transition hover:-translate-y-1 hover:shadow-xl border border-white/80">
+          <div class="w-12 h-12 rounded-2xl bg-black/5 text-zinc-900 border border-white/80 flex items-center justify-center text-xl shadow-inner">
+            <i class="fa-solid fa-network-wired"></i>
+          </div>
+          <div>
+            <div class="text-xs text-zinc-500 font-medium">Connected Devices</div>
+            <div class="text-lg sm:text-xl font-black text-zinc-950" id="statActiveDevices">12 / 14 Online</div>
+            <div class="text-[11px] text-emerald-700 font-bold flex items-center gap-1 mt-0.5">
+              <i class="fa-solid fa-circle-check text-[9px]"></i> All nodes synced
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric 2 -->
+        <div class="glass-panel rounded-3xl p-4 sm:p-5 flex items-center gap-4 transition hover:-translate-y-1 hover:shadow-xl border border-white/80">
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 border border-white/80 flex items-center justify-center text-xl shadow-inner">
+            <i class="fa-solid fa-bolt-lightning"></i>
+          </div>
+          <div>
+            <div class="text-xs text-zinc-500 font-medium">Live Consumption</div>
+            <div class="text-lg sm:text-xl font-black text-zinc-950" id="statPowerUsage">845 W (0.85 kW)</div>
+            <div class="text-[11px] text-zinc-500 mt-0.5">Solar Offset: <span class="text-emerald-700 font-bold">82%</span></div>
+          </div>
+        </div>
+
+        <!-- Metric 3 -->
+        <div class="glass-panel rounded-3xl p-4 sm:p-5 flex items-center gap-4 transition hover:-translate-y-1 hover:shadow-xl border border-white/80">
+          <div class="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-700 border border-white/80 flex items-center justify-center text-xl shadow-inner">
+            <i class="fa-solid fa-temperature-arrow-up"></i>
+          </div>
+          <div>
+            <div class="text-xs text-zinc-500 font-medium">Indoor Climate</div>
+            <div class="text-lg sm:text-xl font-black text-zinc-950" id="statAvgTemp">22.5°C • 48% Hum</div>
+            <div class="text-[11px] text-zinc-700 font-semibold mt-0.5">HVAC: Balanced Eco</div>
+          </div>
+        </div>
+
+        <!-- Metric 4 -->
+        <div class="glass-panel rounded-3xl p-4 sm:p-5 flex items-center gap-4 transition hover:-translate-y-1 hover:shadow-xl border border-white/80">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-700 border border-white/80 flex items-center justify-center text-xl shadow-inner">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div>
+            <div class="text-xs text-zinc-500 font-medium">Perimeter Security</div>
+            <div class="text-lg sm:text-xl font-black text-emerald-700" id="statSecurityStatus">Protected (Locked)</div>
+            <div class="text-[11px] text-zinc-500 mt-0.5">Front Door &amp; Sensors OK</div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Preset Scenes (Frosted Cards) -->
+      <section>
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-black"></div>
+            <h3 class="text-base font-extrabold text-zinc-950">Preset Smart Scenes</h3>
+          </div>
+          <span class="text-xs text-zinc-500">Single-tap automation triggers</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" id="scenesContainer"></div>
+      </section>
+
+      <!-- Room Filter & Device Grid -->
+      <section class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-black"></div>
+            <h3 class="text-base font-extrabold text-zinc-950">Connected Devices</h3>
+          </div>
+          <div class="text-xs text-zinc-500 font-medium">Live bi-directional controls</div>
+        </div>
+
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none" id="roomFilterContainer"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="deviceGridContainer"></div>
+      </section>
+
+    </div>
+
+    <!-- ==================== TAB 2: SPATIAL FLOOR PLAN ==================== -->
+    <div id="tabView_floorplan" class="hidden space-y-6">
+      <div id="floorPlanContainer"></div>
+    </div>
+
+    <!-- ==================== TAB 3: ENERGY ANALYTICS ==================== -->
+    <div id="tabView_analytics" class="hidden space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="glass-panel rounded-3xl p-5 border border-white/80 shadow-md">
+          <div class="text-xs text-zinc-500 uppercase font-bold tracking-wider">Today's Consumption</div>
+          <div class="text-2xl font-black text-zinc-950 mt-1">16.4 <span class="text-sm font-normal text-zinc-500">kWh</span></div>
+          <div class="text-xs text-emerald-700 font-bold mt-1">
+            <i class="fa-solid fa-arrow-down mr-1"></i> 14% less than last Thursday
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-3xl p-5 border border-white/80 shadow-md">
+          <div class="text-xs text-zinc-500 uppercase font-bold tracking-wider">Rooftop Solar Harvest</div>
+          <div class="text-2xl font-black text-emerald-700 mt-1">12.1 <span class="text-sm font-normal text-zinc-500">kWh</span></div>
+          <div class="text-xs text-zinc-500 mt-1">Supplying 74% of total daily load</div>
+        </div>
+
+        <div class="glass-panel rounded-3xl p-5 border border-white/80 shadow-md">
+          <div class="text-xs text-zinc-500 uppercase font-bold tracking-wider">Home Battery Backup</div>
+          <div class="text-2xl font-black text-zinc-950 mt-1">94% <span class="text-sm font-normal text-zinc-500">(12.6 kWh)</span></div>
+          <div class="text-xs text-zinc-700 font-semibold mt-1">Grid Outage Protection: Active</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="glass-panel rounded-3xl p-5 border border-white/80 shadow-lg">
+          <h4 class="font-extrabold text-zinc-950 text-sm mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-black"></i>
+            <span>24-Hour Power Demand Curve</span>
+          </h4>
+          <div class="h-64">
+            <canvas id="hourlyEnergyChart"></canvas>
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-3xl p-5 border border-white/80 shadow-lg">
+          <h4 class="font-extrabold text-zinc-950 text-sm mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-black"></i>
+            <span>Load Distribution by Category</span>
+          </h4>
+          <div class="h-64">
+            <canvas id="categoryEnergyChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel rounded-3xl p-5 border border-white/80 shadow-lg">
+        <h4 class="font-extrabold text-zinc-950 text-sm mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-chart-simple text-black"></i>
+          <span>7-Day Grid Consumption vs Rooftop Solar Generation</span>
+        </h4>
+        <div class="h-72">
+          <canvas id="weeklyEnergyChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 4: SECURITY CENTER ==================== -->
+    <div id="tabView_security" class="hidden space-y-6">
+      <div id="securityContainer"></div>
+    </div>
+
+    <!-- ==================== TAB 5: AUTOMATIONS & ROUTINES ==================== -->
+    <div id="tabView_routines" class="hidden space-y-6">
+      <div id="routinesContainer"></div>
+    </div>
+
+  </main>
+
+  <!-- Footer (Frosted Glass) -->
+  <footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-black/10 mt-12 text-zinc-500 text-xs flex flex-wrap items-center justify-between gap-4 relative z-10">
+    <div class="flex items-center gap-2">
+      <span class="font-bold text-zinc-900">Lumina Home OS</span>
+      <span>&bull;</span>
+      <span>Glassmorphism Edition</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <span>Auto-saved to LocalStorage</span>
+      <span>&bull;</span>
+      <span>Web Audio Synthesizer</span>
+      <span>&bull;</span>
+      <span>Pure HTML5 &amp; CSS</span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/devices.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/floorplan.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
